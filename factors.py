@@ -43,8 +43,6 @@ def cpu_utlization(size, mu=None, lower=None, upper=None, sigma=None):
 
     if mu and lower and upper and sigma:
         return truncated_normal_distribution(mu, lower, upper, sigma, size)
-    elif mu and sigma:
-        return normal_distribution(mu, sigma, size)
     else:
-        return normal_distribution(66.9, 16, size)
+        return truncated_normal_distribution(66.9, 0, 100, 16, size)
         
