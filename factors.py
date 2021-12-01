@@ -1,12 +1,13 @@
 #!/usr/bin/env python2.7
+from distribution import *
 
-def cold_start_from_memory(language, memory):
+def cold_start_from_memory(memory, language=None):
     # TODO: potentially determine cutoff for memory's impact on cold start times.
     #       this is to prevent cold start values from going negative when
     #       system memory is very high
     # these defaults are just the average of all different scenarios
     cold_start = 1000  # milliseconds
-    memory_factor = 0.16
+    memory_factor = -0.16
 
     if language == "Java":
         cold_start = 1634
@@ -37,3 +38,13 @@ def cold_start_from_package_size(platform, language, package_size):
         package_size_factor = 43
 
     return cold_start + (package_size_factor * package_size)
+
+def cpu_utlization(size, mu=None, lower=None, upper=None, sigma=None):
+
+    if mu and lower and upper and sigma:
+        return truncated_normal_distribution(mu, lower, upper, sigma, size)
+    elif mu and sigma:
+        return normal_distribution(mu, sigma, size)
+    else:
+        return normal_distribution(66.9, 16, size)
+        
