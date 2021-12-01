@@ -80,11 +80,22 @@ def main():
         functions[i]["CPUUtilization"] = data_cpu_utlization[i]
 
     '''
+    Add timestamp for each funciton
+    '''
+
+    for i in range(num_functions):
+        if i == 0:
+            functions[i]["TimeStamp"] = 0
+        else:
+            functions[i]["TimeStamp"] = functions[i-1]["TimeStamp"] + int(functions[i-1]["ExecutionTime"])
+
+
+    '''
     Write trace file
     '''
     outfilename = "trace.csv"
     with open(outfilename, 'w') as outfile:
-        fieldnames = ['HashOwner', 'HashApp', 'HashFunction','ExecutionTime', 'ColdStartTime', 'MemoryUse', 'CPUUtilization']
+        fieldnames = ['TimeStamp', 'HashOwner', 'HashApp', 'HashFunction','ExecutionTime', 'ColdStartTime', 'MemoryUse', 'CPUUtilization']
         writer = DictWriter(outfile, fieldnames=fieldnames)
         writer.writeheader()
         for fn in functions:
