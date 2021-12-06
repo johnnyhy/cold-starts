@@ -1,4 +1,3 @@
-#!/usr/bin/env python2.7
 from distribution import *
 
 def cold_start_from_memory(memory, language=None):
@@ -39,10 +38,4 @@ def cold_start_from_package_size(platform, language, package_size):
 
     return cold_start + (package_size_factor * package_size)
 
-def cpu_utlization(size, mu=None, lower=None, upper=None, sigma=None):
-
-    if mu and lower and upper and sigma:
-        return truncated_normal_distribution(mu, lower, upper, sigma, size)
-    else:
-        return truncated_normal_distribution(66.9, 0, 100, 16, size)
         
