@@ -11,9 +11,9 @@ import numpy as np
 
 
 
-def main(nameDirPairs1,nameDirPairs2):
+def main(nameDirPairs1,nameDirPairs2,nameDirPairs3):
 
-    if len(nameDirPairs1) != len(nameDirPairs2):
+    if len(nameDirPairs1) != len(nameDirPairs2) != len(nameDirPairs3):
         sys.exit("config error, check the file config.ini")
     num_pairs = len(nameDirPairs1)
     
@@ -23,7 +23,9 @@ def main(nameDirPairs1,nameDirPairs2):
 
         file_execution_time = nameDirPairs1[i][1]
         file_memory_utlization = nameDirPairs2[i][1]
+        file_function_invocation = nameDirPairs3[i][1]
         df_memory=pd.read_csv(file_memory_utlization)
+        df_function_invocations = pd.read_csv(file_function_invocation)
 
         functions = []
         row_count = 0
@@ -33,11 +35,13 @@ def main(nameDirPairs1,nameDirPairs2):
         
         data_execution_time = []
         data_memory_use = []
+        data_invocation_counts = []
 
         with open(file_execution_time, 'r') as csvfile:
             reader = DictReader(csvfile)
             for row in reader:
-            
+                print(f"processing row {row_count}")
+
                 # skip the first row
                 if row_count == 0:
                     row_count += 1
@@ -76,6 +80,18 @@ def main(nameDirPairs1,nameDirPairs2):
                 
                     function_info["MemoryUse"] = "{:.2f}".format(float(mem_util))
                     data_memory_use.append(float(function_info["MemoryUse"]))
+
+
+                    '''
+                    Extracting following function info from Azure Trace file:
+                    Function Invocation Counts
+                    '''
+                    df_func_invo = df_function_invocations.query('HashFunction=="{}"'.format(function_info["HashFunction"]))
+                    if df_func_invo.empty:
+                        continue
+                    counts = df_func_invo.iloc[:,4:].sum(axis=1).values[0]
+                    function_info["InvocationCounts"] = "{:.2f}".format(float(counts))
+                    data_invocation_counts.append(float(function_info["InvocationCounts"]))
 
                     functions.append(function_info)
                     row_count += 1
@@ -118,6 +134,7 @@ def main(nameDirPairs1,nameDirPairs2):
 
         arr_data_execution_time = np.array(data_execution_time)
         arr_data_memory_use = np.array(data_memory_use)
+        arr_data_invocation_counts = np.array(data_invocation_counts)
 
         with open(outfilename, 'w') as outfile:
             # write comments 
@@ -144,16 +161,16 @@ def main(nameDirPairs1,nameDirPairs2):
             std = "{:.2f}".format(arr_data_memory_use.std())
             outfile.write(f"# Memory Utlization: Mean {mean}; Median {median}; Min {min}; Max {max}; Std Dev {std}\n")
 
-            # # stat info of CPU Use
-            # mean = "{:.2f}".format(data_cpu_utlization.mean())
-            # median = "{:.2f}".format(np.median(data_cpu_utlization))
-            # min = "{:.2f}".format(data_cpu_utlization.min())
-            # max = "{:.2f}".format(data_cpu_utlization.max())
-            # std = "{:.2f}".format(data_cpu_utlization.std())
-            # outfile.write(f"# CPU Utlization: Mean {mean}; Median {median}; Min {min}; Max {max}; Std Dev {std}\n")
+            # # stat info of Function Invocation Counts
+            mean = "{:.2f}".format(arr_data_invocation_counts.mean())
+            median = "{:.2f}".format(np.median(arr_data_invocation_counts))
+            min = "{:.2f}".format(arr_data_invocation_counts.min())
+            max = "{:.2f}".format(arr_data_invocation_counts.max())
+            std = "{:.2f}".format(arr_data_invocation_counts.std())
+            outfile.write(f"# Function Invocation Counts: Mean {mean}; Median {median}; Min {min}; Max {max}; Std Dev {std}\n")
 
             # write data
-            fieldnames = ['TimeStamp', 'HashOwner', 'HashApp', 'HashFunction','ExecutionTime', 'ColdStartTime', 'MemoryUse']
+            fieldnames = ['TimeStamp', 'HashOwner', 'HashApp', 'HashFunction','ExecutionTime', 'ColdStartTime', 'MemoryUse','InvocationCounts']
             writer = DictWriter(outfile, fieldnames=fieldnames)
             writer.writeheader()
             for fn in functions:
@@ -164,4 +181,4 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     config.read(os.path.join(PROJECT_PATH, 'config.ini'))
-    main(config.items('execution_time_paths'),config.items('memory_utlization_paths'))
+    main(config.items('execution_time_paths'),config.items('memory_utlization_paths'),config.items('function_invocation_paths'))
