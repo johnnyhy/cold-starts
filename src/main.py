@@ -53,13 +53,13 @@ def main(nameDirPairs1,nameDirPairs2,nameDirPairs3):
                     HashOwner
                     HashApp
                     HashFunction
-                    ExecutionTime
+                    RunTime
                     '''
                     function_info["HashOwner"] = row["HashOwner"]
                     function_info["HashApp"] = row["HashApp"]
                     function_info["HashFunction"] = row["HashFunction"]
-                    function_info["ExecutionTime"] = "{:.2f}".format(float(row["percentile_Average_50"]))
-                    data_execution_time.append(float(function_info["ExecutionTime"]))
+                    function_info["RunTime"] = "{:.2f}".format(float(row["percentile_Average_50"]))
+                    data_execution_time.append(float(function_info["RunTime"]))
 
                     '''
                     Extracting following function info from Azure Trace file:
@@ -78,8 +78,8 @@ def main(nameDirPairs1,nameDirPairs2,nameDirPairs3):
                             memo_non_memory.append(function_info["HashApp"])
                             continue
                 
-                    function_info["MemoryUse"] = "{:.2f}".format(float(mem_util))
-                    data_memory_use.append(float(function_info["MemoryUse"]))
+                    function_info["MemUse"] = "{:.2f}".format(float(mem_util))
+                    data_memory_use.append(float(function_info["MemUse"]))
 
 
                     '''
@@ -111,14 +111,14 @@ def main(nameDirPairs1,nameDirPairs2,nameDirPairs3):
             # functions[i]["CPUUtilization"] = "{:.2f}".format(data_cpu_utlization[i])
             
         '''
-        Add timestamp for each funciton
+        Add Time for each funciton
         '''
 
         for i in range(num_functions):
             if i == 0:
-                functions[i]["TimeStamp"] = 0
+                functions[i]["Time"] = 0
             else:
-                functions[i]["TimeStamp"] = functions[i-1]["TimeStamp"] + float(functions[i-1]["ExecutionTime"])
+                functions[i]["Time"] = functions[i-1]["Time"] + float(functions[i-1]["RunTime"])
 
 
         '''
@@ -159,7 +159,7 @@ def main(nameDirPairs1,nameDirPairs2,nameDirPairs3):
             min = "{:.2f}".format(arr_data_memory_use.min())
             max = "{:.2f}".format(arr_data_memory_use.max())
             std = "{:.2f}".format(arr_data_memory_use.std())
-            outfile.write(f"# Memory Utlization: Mean {mean}; Median {median}; Min {min}; Max {max}; Std Dev {std}\n")
+            outfile.write(f"# Memory Utilization: Mean {mean}; Median {median}; Min {min}; Max {max}; Std Dev {std}\n")
 
             # # stat info of Function Invocation Counts
             mean = "{:.2f}".format(arr_data_invocation_counts.mean())
@@ -167,10 +167,10 @@ def main(nameDirPairs1,nameDirPairs2,nameDirPairs3):
             min = "{:.2f}".format(arr_data_invocation_counts.min())
             max = "{:.2f}".format(arr_data_invocation_counts.max())
             std = "{:.2f}".format(arr_data_invocation_counts.std())
-            outfile.write(f"# Function Invocation Counts: Mean {mean}; Median {median}; Min {min}; Max {max}; Std Dev {std}\n")
+            outfile.write(f"# Invocation Counts: Mean {mean}; Median {median}; Min {min}; Max {max}; Std Dev {std}\n")
 
             # write data
-            fieldnames = ['TimeStamp', 'HashOwner', 'HashApp', 'HashFunction','ExecutionTime', 'ColdStartTime', 'MemoryUse','InvocationCounts']
+            fieldnames = ['Time', 'HashOwner', 'HashApp', 'HashFunction','RunTime', 'ColdStartTime', 'MemUse','InvocationCounts']
             writer = DictWriter(outfile, fieldnames=fieldnames)
             writer.writeheader()
             for fn in functions:
